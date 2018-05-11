@@ -1,4 +1,14 @@
 [[package]]
+name = "bit_field"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "bitflags"
+version = "1.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "lazy_static"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7,13 +17,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "os_bootinfo"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "reduk"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
+ "bitflags 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "os_bootinfo 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rlibc 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "spin 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "volatile 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "x86_64 0.2.0-alpha-019 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -27,12 +45,40 @@ version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "usize_conversions"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "ux"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "volatile"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
+[[package]]
+name = "x86_64"
+version = "0.2.0-alpha-019"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "bit_field 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "os_bootinfo 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "usize_conversions 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ux 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
 [metadata]
+"checksum bit_field 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ed8765909f9009617974ab6b7d332625b320b33c326b1e9321382ef1999b5d56"
+"checksum bitflags 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "d0c54bb8f454c567f21197eefcdbf5679d0bd99f2ddbe52e84c77061952e6789"
 "checksum lazy_static 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c8f31047daa365f19be14b47c29df4f7c3b581832407daabe6ae77397619237d"
+"checksum os_bootinfo 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6953a44ee0fb135c3870d27b5b3fecf71ce360e409218a8205517041a3e74356"
 "checksum rlibc 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fc874b127765f014d792f16763a81245ab80500e2ad921ed4ee9e82481ee08fe"
 "checksum spin 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)" = "dc28a8d2f2efa706fc9d3d074e265c1d529db41c1603679861662cb88e05e70a"
+"checksum usize_conversions 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "f70329e2cbe45d6c97a5112daad40c34cd9a4e18edb5a2a18fefeb584d8d25e5"
+"checksum ux 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "90b5578148a772e97b7fd34f11268e4be8a28f90b16056e24021fc33ba8e5fd1"
 "checksum volatile 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "6633c5250f16598f92b48272265ce9f8179447f702f0ba0cb640c5be6537b0c0"
+"checksum x86_64 0.2.0-alpha-019 (registry+https://github.com/rust-lang/crates.io-index)" = "dc592fbe51c59b187c7790cdcc3e8cdf4a589061e152dc47e230158b37e8f110"

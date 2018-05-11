@@ -1,0 +1,10 @@
+#!/bin/zsh
+
+bootimage build
+
+if [ $? -eq 0 ]; then
+	qemu-system-x86_64 -drive format=raw,file=bootimage.bin -m 10M
+else
+    echo "Compilation failed."
+fi
+

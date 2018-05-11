@@ -5,25 +5,15 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "cargo build",
-            "command": "cargo",
+            "label": "RUN",
+            "command": "./run",
             "args": [
-                "build"
+                ""
             ],
             "problemMatcher": [
                 "$rustc"
             ]
-        },
-        {
-            "type": "shell",
-            "label": "Run",
-            "command": "ruby",
-            "args": [
-                "run.rb"
-            ],
-            "problemMatcher": [
-                "$rustc"
-            ]
-        },
+        }
     ]
+
 }

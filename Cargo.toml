@@ -1,12 +1,15 @@
 [package]
 name = "reduk"
-version = "0.1.0"
+version = "0.0.0"
 authors = ["kryo4096 <kryo4096@gmail.com>"]
 
 [dependencies]
-rlibc = "1.0"
-volatile = "0.2.3"
-spin = "0.4.6"
+rlibc = "*"
+volatile = "*"
+spin = "*"
+os_bootinfo = "*"
+x86_64 = "0.2.0-alpha"
+bitflags = "*"
 
 [dependencies.lazy_static]
 version = "1.0"
@@ -17,3 +20,6 @@ panic = "abort"
 
 [profile.release]
 panic = "abort"
+
+[package.metadata.bootimage]
+default-target = "x86_64-reduk.json"

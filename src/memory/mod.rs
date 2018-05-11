@@ -1,12 +1,23 @@
 mod frame_allocator;
 
+pub const PAGE_SIZE: u64 = 4096;
 
-pub use x86_64::structures::paging;
-pub use x86_64::{VirtAddr,PhysAddr};
-use self::paging::PhysFrame;
-pub use self::frame_allocator::ALLOC as FRAME_ALLOCATOR;
+pub use self::frame_allocator::AreaFrameAllocator;
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Frame {
+    number: u64,
+}
 
-pub fn allocate_frame() -> PhysFrame {
-    frame_allocator::ALLOC.lock().allocate_frame()
+impl Frame {
+    fn containing_address(address: u64) -> Frame {
+        Frame {
+            number: address / PAGE_SIZE,
+        }
+    }
+}
+
+pub trait FrameAllocator {
+    fn allocate_frame(&mut self) -> Option<Frame>;
+    fn deallocate_frame(&mut self, frame: Frame);
 }

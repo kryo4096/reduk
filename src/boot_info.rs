@@ -5,26 +5,10 @@ use x86_64::VirtAddr;
 
 const BOOT_INFO_ADDR: u64 = 0xb0071f0000;
 
-lazy_static! {
-    pub static ref BOOT_INFO: Mutex<&'static mut BootInfo> = Mutex::new(unsafe {
+pub unsafe fn get_boot_info() -> &'static mut BootInfo {
         let page: Page<Size4KB> = Page::containing_address(VirtAddr::new(BOOT_INFO_ADDR));
-        let ptr: *mut BootInfo = page.start_address().as_mut_ptr();
-
-        &mut *ptr
-    });
+        &mut *page.start_address().as_mut_ptr()
 }
 
-pub fn show() {
-    let boot_info = BOOT_INFO.lock();
 
-    kprintln!("bootinfo version: {}", boot_info.version);
-    kprintln!("p4 table address: {:#x}", boot_info.p4_table_addr);
 
-    for region in boot_info.memory_map.iter() {
-        let start = region.range.start_addr();
-        let end = region.range.end_addr();
-        let rtype = region.region_type;
-
-        kprintln!("{:#x} - {:#x} : {:?}", start, end, rtype);
-    }
-}

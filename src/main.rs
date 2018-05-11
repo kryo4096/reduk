@@ -21,21 +21,34 @@ mod memory;
 mod random;
 
 use vga_buffer::Color;
-
-use memory::paging::{Mapper, Page, PageTable, RecursivePageTable, Size4KB};
-use memory::VirtAddr;
+use memory::{AreaFrameAllocator, FrameAllocator};
 
 #[no_mangle]
 pub fn _start() -> ! {
+
+    let _boot_info;
+
+    unsafe {
+        _boot_info = boot_info::get_boot_info();
+    }
+
+    let mut frame_allocator = AreaFrameAllocator::new(&mut _boot_info.memory_map);
+
     vga_buffer::clear_bg(Color::White);
     vga_buffer::set_foreground(Color::DarkGray);
 
     kprintln!("reduk v0.0.1");
 
-    boot_info::show();
+    frame_allocator.print_memory_map();
+
+    for i in 0..100 {
+        frame_allocator.allocate_frame();
+    }
+
+    frame_allocator.print_memory_map();
+
     keyboard::wait_any();
 
-    let p4_addr = boot_info::BOOT_INFO.lock().p4_table_addr;
 
     loop {}
 }

@@ -1,102 +1,122 @@
 use os_bootinfo::{FrameRange, MemoryMap, MemoryRegion, MemoryRegionType};
-use spin::Mutex;
-use memory::paging::{PhysFrame, PhysFrameRange};
-use x86_64::PhysAddr;
+
+use memory::*;
 
 use boot_info;
 
 const MAP_SIZE: usize = 32;
 
-lazy_static! {
-    pub static ref ALLOC: Mutex<FrameAllocator> = Mutex::new(FrameAllocator::init(
-        &boot_info::BOOT_INFO.lock().memory_map
-    ));
+pub struct AreaFrameAllocator<'a> {
+    memory_map: &'a mut MemoryMap,
+    currently_usable: usize,
+    currently_in_use: usize,
 }
 
-struct RegionList {
-    array: [Option<PhysFrameRange>; MAP_SIZE],
-    length: usize,
-}
+impl<'a> AreaFrameAllocator<'a> {
+    pub fn new(memory_map: &'a mut MemoryMap) -> Self {
+        let mut frame_alloc = AreaFrameAllocator {
+            memory_map: memory_map,
+            currently_usable: 0,
+            currently_in_use: 0,
+        };
 
-impl RegionList {
-    pub fn new() -> Self {
-        let array = [None; MAP_SIZE];
-        let length = 0;
+        frame_alloc.next_area().unwrap();
 
-        Self { array, length }
+        frame_alloc
     }
 
-    pub fn add(&mut self, range: FrameRange) {
-        if self.length >= MAP_SIZE {
-            panic!("Region list overflow!")
-        }
-
-        let frame_range = PhysFrameRange::from(range);
-
-        self.array[self.length] = Some(frame_range);
-        self.length += 1;
+    fn currently_usable(&mut self) -> &mut MemoryRegion {
+        let region = &mut self.memory_map[self.currently_usable];
+        assert_eq!(region.region_type, MemoryRegionType::Usable);
+        region
     }
 
-    pub fn length(&self) -> usize {
-        self.length
+    fn currently_in_use(&mut self) -> &mut MemoryRegion {
+        let region = &mut self.memory_map[self.currently_in_use];
+        assert_eq!(region.region_type, MemoryRegionType::InUse);
+        region
     }
 
-    pub fn remove_last(&mut self) {
-        self.array[0] = None;
+    fn next_area(&mut self) -> Result<(), ()> {
+        
+        let mut region_in_use = None;
 
-        for i in 1..self.array.len() {
-            self.array[i - 1] = self.array[i];
-        }
-
-        self.length -= 1;
-    }
-
-    pub fn first(&mut self) -> PhysFrameRange {
-        self.array[0].expect("Out of memory")
-    }
-}
-
-pub struct FrameAllocator {
-    usable: RegionList,
-}
-
-impl FrameAllocator {
-    pub fn init(map: &MemoryMap) -> Self {
-        let mut usable = RegionList::new();
-
-        let map_iter = map.iter();
-
-        for region in map_iter {
+        /* Find usable memory region */
+        for region in self.memory_map.iter_mut() {
             if region.region_type == MemoryRegionType::Usable {
-                usable.add(region.range);
+
+                region_in_use = Some(MemoryRegion {
+                    range: {
+                        let usable_addr = region.range.start_addr();
+                        FrameRange::new(usable_addr, usable_addr + 1)
+                    },
+                    region_type: MemoryRegionType::InUse,
+                });
+
+                region.range.start_frame_number += 1;
             }
         }
 
-        if usable.length() < 1 {
-            panic!("No usable memory");
+        if region_in_use.is_none() {
+            return Err(());
         }
 
-        FrameAllocator { usable }
+        self.memory_map.add_region(region_in_use.unwrap());
+
+        let mut usable_frame = None;
+
+        for (i, region) in self.memory_map.iter().enumerate() {
+            if region.region_type == MemoryRegionType::Usable {
+                usable_frame = Some(region.range.start_frame_number);
+                self.currently_usable = i;
+            }
+        }
+
+        let usable_frame = usable_frame.unwrap();
+
+        for (i, region) in self.memory_map.iter().enumerate() {
+            if region.region_type == MemoryRegionType::InUse
+                && region.range.start_frame_number == usable_frame - 1
+            {
+                self.currently_in_use = i;
+                return Ok(());
+            }
+        }
+
+        unreachable!();
+
     }
 
-    pub fn allocate_frame(&mut self) -> PhysFrame {
-        let mut current_region = self.usable.first();
+    pub fn print_memory_map(&self) {
+        for region in self.memory_map.iter() {
+            let start = region.range.start_addr();
+            let end = region.range.end_addr();
+            let rtype = region.region_type;
 
-        if current_region.is_empty() {
-            self.usable.remove_last();
-            current_region = self.usable.first();
+            kprintln!("{:#x} - {:#x} : {:?}", start, end, rtype);
+        }
+    }
+}
+
+impl<'a> FrameAllocator for AreaFrameAllocator<'a> {
+    fn allocate_frame(&mut self) -> Option<Frame> {
+        if self.currently_usable().range.is_empty() {
+            self.currently_usable().region_type = MemoryRegionType::Empty;
+
+            if self.next_area() == Err(()) {
+                return None;
+            }
         }
 
-        let frame = current_region.start;
+        let frame = Frame::containing_address(self.currently_usable().range.start_addr());
 
-        if let Some(ref mut range) = self.usable.array[0] {
-            range.start += 1;
-        }
+        self.currently_usable().range.start_frame_number += 1;
+        self.currently_in_use().range.end_frame_number = self.currently_usable().range.start_frame_number;
 
-        frame
+        Some(frame)
     }
 
-    pub fn deallocate_frame(&mut self, frame: PhysFrame) {
+    fn deallocate_frame(&mut self, frame: Frame) {
         unimplemented!()
     }
 }

@@ -6,7 +6,6 @@ pub struct KeyboardRaw {
 }
 
 impl KeyboardRaw {
-
     pub unsafe fn new(kb_port: u16, status_port: u16) -> Self {
         Self {
             kb_port: Port::new(kb_port),
@@ -15,7 +14,6 @@ impl KeyboardRaw {
     }
 
     pub fn poll(&mut self) -> Option<u8> {
-
         let sc;
 
         unsafe {
@@ -103,12 +101,9 @@ impl KeyboardRaw {
         }
 
     }*/
-   
 
     pub fn wait_any(&mut self) {
-        unsafe {
-            while (self.status_port.read() & 1) != 1 {}
-        }
+        unsafe { while (self.status_port.read() & 1) != 1 {} }
     }
 }
 
@@ -122,10 +117,10 @@ pub enum KeyEvent {
 }
 
 impl KeyEvent {
-
     pub fn from(scancode: u8, keymap: KeyMap) -> KeyEvent {
-
-        if scancode as usize >= 128 + keymap.len() || (scancode as usize) < 128 && (scancode as usize) > keymap.len(){
+        if scancode as usize >= 128 + keymap.len()
+            || (scancode as usize) < 128 && (scancode as usize) > keymap.len()
+        {
             return KeyEvent::Invalid;
         };
 
@@ -134,8 +129,5 @@ impl KeyEvent {
         } else {
             return KeyEvent::Release(keymap[scancode as usize - 128]);
         }
-
-
     }
 }
-

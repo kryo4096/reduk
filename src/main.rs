@@ -1,4 +1,4 @@
-#![feature(lang_items, const_fn, asm)]
+#![feature(lang_items, const_fn, asm, ptr_internals)]
 #![no_std]
 #![no_main]
 
@@ -20,12 +20,11 @@ mod keyboard;
 mod memory;
 mod random;
 
-use vga_buffer::Color;
 use memory::{AreaFrameAllocator, FrameAllocator};
+use vga_buffer::Color;
 
 #[no_mangle]
 pub fn _start() -> ! {
-
     let _boot_info;
 
     unsafe {
@@ -41,14 +40,9 @@ pub fn _start() -> ! {
 
     frame_allocator.print_memory_map();
 
-    for i in 0..100 {
-        frame_allocator.allocate_frame();
-    }
-
-    frame_allocator.print_memory_map();
-
     keyboard::wait_any();
 
+    memory::test_paging(&mut frame_allocator);
 
     loop {}
 }

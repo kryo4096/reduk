@@ -2,10 +2,6 @@ use os_bootinfo::{FrameRange, MemoryMap, MemoryRegion, MemoryRegionType};
 
 use memory::*;
 
-use boot_info;
-
-const MAP_SIZE: usize = 32;
-
 pub struct AreaFrameAllocator<'a> {
     memory_map: &'a mut MemoryMap,
     currently_usable: usize,
@@ -38,53 +34,46 @@ impl<'a> AreaFrameAllocator<'a> {
     }
 
     fn next_area(&mut self) -> Result<(), ()> {
-        
-        let mut region_in_use = None;
+        use self::MemoryRegionType::{InUse, Usable};
 
-        /* Find usable memory region */
-        for region in self.memory_map.iter_mut() {
-            if region.region_type == MemoryRegionType::Usable {
+        let usable_addr = { 
+            let first_usable_region = self.memory_map
+                .iter_mut()
+                .filter(|reg| reg.region_type == Usable)
+                .nth(0);
 
-                region_in_use = Some(MemoryRegion {
-                    range: {
-                        let usable_addr = region.range.start_addr();
-                        FrameRange::new(usable_addr, usable_addr + 1)
-                    },
-                    region_type: MemoryRegionType::InUse,
-                });
-
-                region.range.start_frame_number += 1;
+            if first_usable_region == None {
+                return Err(());
             }
-        }
 
-        if region_in_use.is_none() {
-            return Err(());
-        }
+            let first_usable_region = first_usable_region.unwrap();
 
-        self.memory_map.add_region(region_in_use.unwrap());
+            first_usable_region.range.start_frame_number += 1;
 
-        let mut usable_frame = None;
+            first_usable_region.range.start_addr()
 
-        for (i, region) in self.memory_map.iter().enumerate() {
-            if region.region_type == MemoryRegionType::Usable {
-                usable_frame = Some(region.range.start_frame_number);
-                self.currently_usable = i;
-            }
-        }
+        };
 
-        let usable_frame = usable_frame.unwrap();
+        self.memory_map.add_region(MemoryRegion {
+            range: FrameRange::new(usable_addr - 1, usable_addr),
+            region_type: InUse,
+        });
 
-        for (i, region) in self.memory_map.iter().enumerate() {
-            if region.region_type == MemoryRegionType::InUse
-                && region.range.start_frame_number == usable_frame - 1
-            {
-                self.currently_in_use = i;
-                return Ok(());
-            }
-        }
+        let currently_usable = self.memory_map
+            .iter()
+            .position(|reg| reg.region_type == Usable)
+            .expect("Usable region not found! This shouldn't happen.");
 
-        unreachable!();
+        assert_eq!(self.memory_map[currently_usable].region_type, Usable);
 
+        let currently_in_use = currently_usable - 1;
+
+        assert_eq!(self.memory_map[currently_in_use].region_type, InUse);
+
+        self.currently_in_use = currently_in_use;
+        self.currently_usable = currently_usable;
+
+        Ok(())
     }
 
     pub fn print_memory_map(&self) {
@@ -111,7 +100,8 @@ impl<'a> FrameAllocator for AreaFrameAllocator<'a> {
         let frame = Frame::containing_address(self.currently_usable().range.start_addr());
 
         self.currently_usable().range.start_frame_number += 1;
-        self.currently_in_use().range.end_frame_number = self.currently_usable().range.start_frame_number;
+        self.currently_in_use().range.end_frame_number =
+            self.currently_usable().range.start_frame_number;
 
         Some(frame)
     }

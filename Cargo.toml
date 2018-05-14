@@ -9,7 +9,7 @@ volatile = "*"
 spin = "*"
 os_bootinfo = "*"
 x86_64 = "0.2.0-alpha"
-bitflags = "*"
+bitflags = "1.0"
 
 [dependencies.lazy_static]
 version = "1.0"

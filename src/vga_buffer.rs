@@ -66,7 +66,7 @@ impl VGABuffer {
         let chars = &mut *(0xb8000 as *mut CharBuf);
         let mut port_a = Port::new(PORT_A);
         let mut port_b = Port::new(PORT_B);
-        
+
         port_a.write(0x0Au8);
         port_b.write(0x20u8);
 
@@ -100,7 +100,6 @@ impl Writer {
                 });
 
                 self.column_position += 1;
-
             }
         }
     }
@@ -160,10 +159,14 @@ impl Write for Writer {
 }
 
 lazy_static! {
-    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
-        column_position: 0,
-        color_code: ColorCode::new(Color::Black, Color::White),
-        buffer: unsafe { VGABuffer::new() },
+    pub static ref WRITER: Mutex<Writer> = Mutex::new({
+        let mut writer = Writer {
+            column_position: 0,
+            color_code: ColorCode::new(Color::Black, Color::White),
+            buffer: unsafe { VGABuffer::new() },
+        };
+        writer.clear();
+        writer
     });
 }
 
